@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #-*- coding:UTF-8 -*-
 
-#dslogic的I2C解析结果的csv文件,将一列数据的格式转换成一行一个数据包的格式
+#dslogic的MIPI解析结果的csv文件,将一列数据的格式转换成一行一个数据包的格式
 
 import sys
 import os
@@ -53,9 +53,10 @@ if os.path.isfile(str_file_path):
             list_data.append(data_temp);
 
         # 将一维列表转换成二维列表
-        list_sheet = [];
+        list_sheet = [["Mode", "Length", "Action", "DT", "Data0", "Data1", "ECC"]];
+        int_sheet_row = 1;
         bool_newline = True;
-        int_sheet_row = 0;
+
         for item in list_data:
             if (item == "Stop"):
                 int_sheet_row = int_sheet_row + 1;
@@ -63,11 +64,12 @@ if os.path.isfile(str_file_path):
             elif (bool_newline == True):
                 bool_newline = False;
                 list_sheet.append([item]);
+                list_sheet[int_sheet_row].extend([""]);
             else:
                 list_sheet[int_sheet_row].extend([item]);
 
-
-
+    for index in range(1, len(list_sheet)):
+        list_sheet[index][1] = "0x" + "{:02X}".format(len(list_sheet[index])-2);
 
     # 保存为xlsx文件
     workbook = openpyxl.Workbook()

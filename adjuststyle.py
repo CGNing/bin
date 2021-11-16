@@ -5,25 +5,33 @@
 
 import sys
 import os
+import re
 
 if len (sys.argv) > 1:
-    str_file_path = sys.argv[1]
+    str_input_path = sys.argv[1]
 else:
     print ("无效的传入参数");
     exit(-1);
 
-def do_adjust (str_file_name):
-    with open(str_file_path, "r+") as file:
+def do_adjust (fun_str_file_path):
+    with open(fun_str_file_path, "r+") as file:
         str_file = file.read();
-        file.seek(0);
-        file.write (str_file.expandtabs(4));
+        str_replace = re.sub("\n\n\n+", "\n\n", str_file);
+        file.seek(0);   # 归零指针
+        file.truncate();   # 清空文件
+        # print (str_file.expandtabs(4));
+        file.write (str_replace.expandtabs(4));
         file.close();
 
-if os.path.isfile(str_file_path):
-    do_adjust(str_file_path);
+# start
+if os.path.isfile(str_input_path):
+    do_adjust(str_input_path);
 
-elif os.path.isdir(str_file_path):
-    print ("TODO");
+elif os.path.isdir(str_input_path):
+    for root, dirs, files in os.walk(str_input_path):
+        for f in files:
+            str_file_path = os.path.join(root, f);
+            do_adjust(str_file_path);
 
 else:
     print ("传入参数未知错误");
