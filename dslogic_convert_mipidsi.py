@@ -9,9 +9,17 @@ import os
 try:
     import csv
     import openpyxl
+    import openpyxl.utils
+    import openpyxl.styles
 except ImportError:
     print ("找不到依赖库");
     print (ImportError);
+
+def calc_ecc():
+    return
+
+def calc_crc():
+    return
 
 if len (sys.argv) > 1:
     str_file_path = sys.argv[1]
@@ -48,8 +56,6 @@ if os.path.isfile(str_file_path):
             elif (data_temp == "Bi-directional Data Lane Turnaround"):
                 data_temp = "BTA";
 
-            # data_temp = "{:02X}".format(data_temp); # 修改数字格式
-
             list_data.append(data_temp);
 
         # 将一维列表转换成二维列表
@@ -64,20 +70,53 @@ if os.path.isfile(str_file_path):
             elif (bool_newline == True):
                 bool_newline = False;
                 list_sheet.append([item]);
-                list_sheet[int_sheet_row].extend([""]);
             else:
                 list_sheet[int_sheet_row].extend([item]);
 
+    list_sheet_property = [[0]];
+    mipi_data_direct = 0;   # 0 host -> slv, 1 slv -> host
     for index in range(1, len(list_sheet)):
-        list_sheet[index][1] = "0x" + "{:02X}".format(len(list_sheet[index])-2);
+        #插入MIPI包的长度
+        len_list_sheet_index = len(list_sheet[index])-1;
+        if (len_list_sheet_index > 0):
+            list_sheet[index].insert(1, "0x{:02X}".format(len_list_sheet_index));
 
-    # 保存为xlsx文件
+        #判断数据包的方向
+        if (list_sheet[index][0] == "BTA"):
+            mipi_data_direct = not(mipi_data_direct);
+            list_sheet_property.append([2]);
+        else:
+            list_sheet_property.append([mipi_data_direct]);
+
+    # 生成xlsx文件
     workbook = openpyxl.Workbook()
     sheet = workbook.active #Excel页签标识
 
-    for list_data_row in list_sheet:
-        sheet.append(list_data_row);
-    workbook.save(str_fileout_path) #保存为xlsx文件，名字可以随意写
+    for list_sheet_row in list_sheet:
+        sheet.append(list_sheet_row);
+
+    #设置列宽
+    for index in range(1, sheet.max_column+1):
+        sheet.column_dimensions[openpyxl.utils.get_column_letter(index)].width = 6;\
+
+    #设置颜色
+    fill_cambridgeblue = openpyxl.styles.PatternFill("solid", "DAEEF3");
+    fill_blue = openpyxl.styles.PatternFill("solid", "B7DEE8");
+
+    ##第一行粗体
+    for cell in sheet[1]:
+                cell.font=openpyxl.styles.Font(bold=True);
+
+    for index in range(0, len(list_sheet)):
+        if (list_sheet_property[index][0] == 2):
+            for cell in sheet[index+1]:
+                cell.fill=fill_blue;
+        elif (list_sheet_property[index][0] == 1):
+            for cell in sheet[index+1]:
+                cell.fill=fill_cambridgeblue;
+
+    #保存为xlsx文件，名字可以随意写
+    workbook.save(str_fileout_path)
 
     '''
     # 保存为csv文件

@@ -67,13 +67,21 @@ if os.path.isfile(str_file_path):
             else:
                 list_sheet[int_sheet_row].extend([item]);
 
-    # 保存为xlsx文件
+    #生成xlsx文件
     workbook = openpyxl.Workbook()
     sheet = workbook.active #Excel页签标识
 
     for list_data_row in list_sheet:
         sheet.append(list_data_row);
-    workbook.save(str_fileout_path) #保存为xlsx文件，名字可以随意写
+
+    #设置列宽
+    for index in range(1, 2):
+        sheet.column_dimensions[openpyxl.utils.get_column_letter(index)].width = 6;
+    for index in range(3, sheet.max_column+1):
+        sheet.column_dimensions[openpyxl.utils.get_column_letter(index)].width = 3;
+
+    #保存为xlsx文件，名字可以随意写
+    workbook.save(str_fileout_path)
 
     '''
     # 保存为csv文件
